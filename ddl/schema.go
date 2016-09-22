@@ -91,7 +91,7 @@ func (d *ddl) delReorgSchema(t *meta.Meta, job *model.Job) error {
 		return errors.Trace(err)
 	}
 
-	if err = d.dropSchemaData(dbInfo, tables); err != nil {
+	if err = d.dropSchemaData(dbInfo, tables, job); err != nil {
 		return errors.Trace(err)
 	}
 
@@ -146,7 +146,7 @@ func (d *ddl) onDropSchema(t *meta.Meta, job *model.Job) error {
 	return errors.Trace(err)
 }
 
-func (d *ddl) dropSchemaData(dbInfo *model.DBInfo, tables []*model.TableInfo) error {
+func (d *ddl) dropSchemaData(dbInfo *model.DBInfo, tables []*model.TableInfo, job *model.Job) error {
 	for _, tblInfo := range tables {
 		alloc := autoid.NewAllocator(d.store, dbInfo.ID)
 		t, err := table.TableFromMeta(alloc, tblInfo)
@@ -154,10 +154,13 @@ func (d *ddl) dropSchemaData(dbInfo *model.DBInfo, tables []*model.TableInfo) er
 			return errors.Trace(err)
 		}
 
-		err = d.dropTableData(t)
+		// add table infoschema to the job.
+		job.TableID = tblInfo.ID
+		err = d.dropTableData(t, job)
 		if err != nil {
 			return errors.Trace(err)
 		}
 	}
+	job.ID = 0
 	return nil
 }

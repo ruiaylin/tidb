@@ -91,7 +91,7 @@ func (d *ddl) delReorgTable(t *meta.Meta, job *model.Job) error {
 		return errors.Trace(err)
 	}
 
-	err = d.dropTableData(tbl)
+	err = d.dropTableData(tbl, job)
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -181,7 +181,7 @@ func (d *ddl) getTableInfo(t *meta.Meta, job *model.Job) (*model.TableInfo, erro
 	return tblInfo, nil
 }
 
-func (d *ddl) dropTableData(t table.Table) error {
-	err := d.delKeysWithPrefix(tablecodec.EncodeTablePrefix(t.Meta().ID), bgJobFlag)
+func (d *ddl) dropTableData(t table.Table, job *model.Job) error {
+	err := d.delKeysWithPrefix(tablecodec.EncodeTablePrefix(t.Meta().ID), bgJobFlag, job)
 	return errors.Trace(err)
 }
